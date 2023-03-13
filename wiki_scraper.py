@@ -43,7 +43,7 @@ def fetch_creature_info(detail_page_url: str) -> dict:
         detail_page_url (str): URL of a Space Creature detail page in the wiki.
 
     Returns:
-        dict: Information of the Space Creature as a dictionary. If the table in the wiki is complete, the dictionary contains the keys: wiki_url (str), number (str), name (str), personality (str), likes (list), and dislikes (list).
+        dict: Information of the Space Creature as a dictionary. If the table in the wiki is complete, the dictionary contains the keys: wiki_url (str), number (int or str), name (str), personality (str), likes (list), and dislikes (list).
     """
 
     # 1. fetch HTML of the detail page
