@@ -1,3 +1,5 @@
+import base64
+
 import requests  # pip install requests
 from bs4 import BeautifulSoup  # pip install beautifulsoup4
 
@@ -43,7 +45,7 @@ def fetch_creature_info(detail_page_url: str) -> dict:
         detail_page_url (str): URL of a Space Creature detail page in the wiki.
 
     Returns:
-        dict: Information of the Space Creature as a dictionary. If the table in the wiki is complete, the dictionary contains the keys: wiki_url (str), number (int or str), name (str), personality (str), likes (list), and dislikes (list).
+        dict: Information of the Space Creature as a dictionary. If the table in the wiki is complete, the dictionary contains the keys: wiki_url (str), number (int or str), name (str), personality (str), likes (list), dislikes (list), image_url (str), image_alt (str), attribution (str).
     """
 
     # 1. fetch HTML of the detail page
@@ -100,6 +102,25 @@ def fetch_creature_info(detail_page_url: str) -> dict:
     info_dict["likes"] = likes
     info_dict["dislikes"] = dislikes
 
+    # 5. read the src url for the creature image and the corresponding alt text
+    img = soup.find("img")
+    if img:
+        info_dict["image_url"] = f"https:{img.get('src')}"
+        info_dict["image_alt"] = img.get("alt")
+
+        # 5.1 fetch the image of the creature and generate a DataURL from it
+        response = requests.get(info_dict["image_url"])
+        if response.status_code == 200:
+            image_bytes = response.content
+            image_base64 = base64.b64encode(image_bytes).decode("utf-8")
+            info_dict["image_url"] = f"data:image/png;base64,{image_base64}"
+
+    # 7. generate attribution text
+    detail_page_name = detail_page_url.split("/")[-1]
+    info_dict[
+        "attribution"
+    ] = f'Information on/pictures of the creature(s) are from the <a href="https://thessum.miraheze.org/wiki/Main_Page">The Ssum: Forbidden Lab\'s Unofficial Miraheze Wiki</a>. Authors of the Wiki article <a href="{detail_page_url}">{detail_page_name.replace("_", " ")}</a> are <a href="https://thessum.miraheze.org/w/index.php?title={detail_page_name}&action=history">The Ssum: Forbidden Lab\'s Unofficial Miraheze Wiki and contributors</a>. Provided under the licence <a href="https://creativecommons.org/licenses/by-sa/4.0/">Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)</a>.'
+
     return info_dict
 
 
@@ -107,7 +128,7 @@ def print_creature_info(creature_info: dict) -> None:
     """Prints information about a Space Creature.
 
     Args:
-        creature_info (dict): Dictionary containing the creature's wiki_url, number, name, personality, likes, and dislikes
+        creature_info (dict): Dictionary containing the creature's wiki_url, number, name, personality, likes, dislikes, image_url, image_alt, and an attribution to its wiki page
     """
 
     print()
@@ -117,6 +138,9 @@ def print_creature_info(creature_info: dict) -> None:
     print(f"Likes: {creature_info.get('likes')}")
     print(f"Dislikes: {creature_info.get('dislikes')}")
     print(f"Wiki URL: {creature_info.get('wiki_url')}")
+    print(f"Image URL: {creature_info.get('image_url')}")
+    print(f"Image alt: {creature_info.get('image_alt')}")
+    print(f"Attribution: {creature_info.get('attribution')}")
 
 
 if __name__ == "__main__":
